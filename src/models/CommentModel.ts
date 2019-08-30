@@ -1,6 +1,7 @@
 import * as Sequelize from 'sequelize';
-import { BaseModelInterface } from '../BaseModelInterface';
-import { ModelsInterface } from '../ModelsInterface';
+
+import { ModelsInterface } from '../interfaces/ModelsInterface';
+import { BaseModelInterface } from '../interfaces/BaseModelInterface';
 
 export interface CommentAttributes {
   id?: number;
