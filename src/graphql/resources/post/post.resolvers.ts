@@ -1,6 +1,7 @@
 import { DbConnection } from './../../../interfaces/DbConnectionInterface';
 import { GraphQLResolveInfo } from "graphql";
 import { PostInstance } from '../../../models/PostModel';
+import { Transaction } from 'sequelize';
 
 
 export const postResolvers = {
@@ -16,10 +17,10 @@ export const postResolvers = {
         limit: offset,
         offset: offset
       });
+    }
   },
 
   Query: {
-
     posts: (parent, { first = 10, offset = 0 }, {db} : {db: DbConnection}, info: GraphQLResolveInfo) => {
       return db.Post.findAll({
         limit: first,
@@ -33,6 +34,34 @@ export const postResolvers = {
         return post
       })
     }
+  },
+
+  Mutation: {
+    createPost: (parent, {input}, {db} : {db: DbConnection}, info: GraphQLResolveInfo) => {
+      return db.sequelize.transaction((t: Transaction) => {
+        return db.Post.create(input, {transaction: t});
+      })
+    },
+
+    updatePost: (parent, {id, input}, {db} : {db: DbConnection}, info: GraphQLResolveInfo) => {
+      return db.sequelize.transaction((t: Transaction) => {
+        return db.Post.findById(id).then((post: PostInstance) => {
+          if(!post) throw new Error(`Post with id ${id} not found!`);
+          return post.update(input, {transaction: t})
+        })
+      })
+    },
+
+    deletePost: (parent, {id, input}, {db} : {db: DbConnection}, info: GraphQLResolveInfo) => {
+      id = parseInt(id);
+      return db.sequelize.transaction((t: Transaction) => {
+        return db.Post.findById(id).then((post: PostInstance) => {
+          if(!post) throw new Error(`Post with id ${id} not found!`);
+          return post.destroy({transaction: t}).then((post => !!post))
+        })
+      })
+    }
+
   }
 };
 
